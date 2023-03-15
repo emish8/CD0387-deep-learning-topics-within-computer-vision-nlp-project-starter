@@ -7,16 +7,25 @@ import torch.optim as optim
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-
+import os
 import argparse
 import time
+import logging
+import sys
+
 
 #TODO: Import dependencies for Debugging andd Profiling
-from smdebug import modes
-from smdebug.profiler.utils import str2bool
-from smdebug.pytorch import get_hook
 
-def test(model, test_loader, criterion, hook):
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
+
+def test(model, test_loader, criterion):
     '''
     TODO: Complete this function that can take a model and a 
           testing data loader and will get the test accuray/loss of the model
@@ -24,7 +33,6 @@ def test(model, test_loader, criterion, hook):
           
     '''
     model.eval()
-    hook.set_mode(smd.modes.EVAL)
     test_loss = 0
     correct = 0
     with torch.no_grad():
@@ -36,13 +44,13 @@ def test(model, test_loader, criterion, hook):
 
     test_loss /= len(test_loader.dataset)
     logger.info(
-        "Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+        "Test set: Average loss: {:.4f}, Average accuracy: {}/{} ({:.0f}%)\n".format(
             test_loss, correct, len(test_loader.dataset), 100.0 * correct / len(test_loader.dataset)
         )
     )
 
 
-def train(model, train_loader, validation_loader, criterion, optimizer,  epochs, hook):
+def train(model, train_loader, validation_loader, criterion, optimizer,  epochs):
     '''
     TODO: Complete this function that can take a model and
           data loaders for training and will get train the model
@@ -54,7 +62,7 @@ def train(model, train_loader, validation_loader, criterion, optimizer,  epochs,
         print('epoch',e)
         
         # training data
-        hook.set_mode(smd.modes.TRAIN)
+       
         model.train()
         for (data, target) in train_loader:
             optimizer.zero_grad()
@@ -64,19 +72,8 @@ def train(model, train_loader, validation_loader, criterion, optimizer,  epochs,
             optimizer.step()
             c += len(data)
         
-        # validaiton data
-        hook.set_mode(smd.modes.EVAL)
-        model.eval()
-        running_corrects = 0
-        with torch.no_grad():
-            for (data, target) in validation_loader:
-                outputs = model(data)
-                loss = criterion(outputs, target)
-                _, preds = torch.max(outputs, 1)
-                running_corrects += torch.sum(preds == target.data).item()
-        total_accuracy = running_corrects / len(validation_loader.dataset)
-        logger.info(f"Validation Set Avg Accuracy: {100*total_accuracy}%")
-    
+
+        
     return model    
     
 
@@ -92,8 +89,8 @@ def net():
         param.requires_grad = False   
 
     num_features=model.fc.in_features
-    model.fc = nn.Sequential(
-                   nn.Linear(num_features, 10))
+    model.fc = nn.Sequential(nn.Linear(num_features, 133))
+    
     return model
 
 def create_data_loaders(data, batch_size):
@@ -146,11 +143,7 @@ def main(args):
     '''
     loss_criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.fc.parameters(), lr=0.001)
-    
-     
-    # debugger hook
-    hook = smd.Hook.create_from_json_file()
-    hook.register_hook(model)
+
     
     '''
     TODO: Call the train function to start training your model
@@ -160,12 +153,12 @@ def main(args):
     # calling loader 
     train_loader, validation_loader, test_loader = create_data_loaders(data=args.data, batch_size=args.batch_size)
     
-    model=train(model, train_loader, validation_loader, loss_criterion, optimizer, args.epochs, hook)
+    model=train(model, train_loader, validation_loader, loss_criterion, optimizer, args.epochs)
     
     '''
     TODO: Test the model to see its accuracy
     '''
-    test(model, test_loader, criterion)
+    test(model, test_loader, loss_criterion)
     
     '''
     TODO: Save the trained model
@@ -204,10 +197,10 @@ if __name__=='__main__':
         "--lr", type=float, default=1.0, metavar="LR", help="learning rate (default: 1.0)"
     )
     
-     parser.add_argument(
+    parser.add_argument(
         "--data",
         type=str,
-        default=os.environ["SM_CHANNEL_TRAIN"],
+        default=os.environ["SM_CHANNEL_TRAINING"],
         help="training data path in S3"
     )
     parser.add_argument(
@@ -219,10 +212,10 @@ if __name__=='__main__':
     args=parser.parse_args()
     
     # logging information 
-    logging.info(f"Batch Size: {args.batch_size}")
-    logging.info(f"Epochs: {args.epochs}")
+
     logging.info(f"Learning Rate: {args.lr}")
+    logging.info(f"Batch Size: {args.batch_size}")
     logging.info(f"Test Batch Size: {args.test_batch_size}")
-    
+    logging.info(f"Epochs: {args.epochs}")
     
     main(args)
