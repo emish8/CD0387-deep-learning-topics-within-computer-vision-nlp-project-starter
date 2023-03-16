@@ -74,8 +74,11 @@ Hypertuning needs to be improved. I can give larger range of values for tuning j
 
 ## Model Deployment
 **TODO**: Give an overview of the deployed model and instructions on how to query the endpoint with a sample input.
+The model is deployed on ml.m5.large image. It takes image array as input.
 
 **TODO** Remember to provide a screenshot of the deployed active endpoint in Sagemaker.
+![image](https://user-images.githubusercontent.com/83595196/225718249-d737d748-9a35-4374-a7ba-eac8203fc3ba.png)
+![image](https://user-images.githubusercontent.com/83595196/225719059-a2eab951-bcf1-4843-bdb7-f5be1844e65c.png)
 
 ## Standout Suggestions
 **TODO (Optional):** This is where you can provide information about any standout suggestions that you have attempted.
