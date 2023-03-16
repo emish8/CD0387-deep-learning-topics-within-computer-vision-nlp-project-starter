@@ -41,19 +41,19 @@ def test(model, test_loader, criterion, hook):
     hook.set_mode(smd.modes.EVAL)
     test_loss = 0
     correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            output = model(data)
-            test_loss += F.nll_loss(output, target, size_average=False).item()  # sum up batch loss
-            pred = output.max(1, keepdim=True)[1]  # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
+   
+    for data, target in test_loader:
+        output = model(data)
+        test_loss += criterion(output, target).item()  # sum up batch loss
+        _, pred = torch.max(output, 1) 
+        correct += torch.sum(pred==target.data).item()
 
-    test_loss /= len(test_loader.dataset)
-    logger.info(
-        "Test set: Average loss: {:.4f}, Average accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss, correct, len(test_loader.dataset), 100.0 * correct / len(test_loader.dataset)
-        )
-    )
+   
+    avg_acc = correct / len(test_loader.dataset)
+    avg_loss = test_loss / len(test_loader.dataset)
+    logger.info(f"Test set: Average loss: {avg_loss}, Average accuracy: {100*avg_acc}%")
+
+    
 
 
 def train(model, train_loader, validation_loader, criterion, optimizer,  epochs, hook):
@@ -88,7 +88,7 @@ def train(model, train_loader, validation_loader, criterion, optimizer,  epochs,
                 loss = criterion(outputs, target)
                 _, preds = torch.max(outputs, 1)
                 running_corrects += torch.sum(preds == target.data).item()
-        total_accuracy = running_corrects / len(validation_loader.dataset)
+        total_acc= running_corrects / len(validation_loader.dataset)
         logger.info(f"Validation set: Average accuracy: {100*total_acc}%")
         
     return model    
@@ -179,12 +179,14 @@ def main(args):
     '''
     TODO: Test the model to see its accuracy
     '''
-    test(model, test_loader, loss_criterion)
+    test(model, test_loader, loss_criterion, hook)
     
     '''
     TODO: Save the trained model
     '''
-    torch.save(model, path)
+    
+    torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
+
        
 
 if __name__=='__main__':
@@ -221,7 +223,7 @@ if __name__=='__main__':
     parser.add_argument(
         "--data",
         type=str,
-        default=os.environ["SM_CHANNEL_TRAINING"],
+        default=os.environ["SM_CHANNEL_TRAIN"],
         help="training data path in S3"
     )
     parser.add_argument(

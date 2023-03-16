@@ -35,19 +35,17 @@ def test(model, test_loader, criterion):
     model.eval()
     test_loss = 0
     correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            output = model(data)
-            test_loss += F.nll_loss(output, target, size_average=False).item()  # sum up batch loss
-            pred = output.max(1, keepdim=True)[1]  # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
+    
+    for data, target in test_loader:
+        output = model(data)
+        test_loss += criterion(output, target).item()  # sum up batch loss
+        _, preds = torch.max(output, 1)  # get the index of the max log-probability
+        correct += torch.sum(preds==target.data).item()
+    
+    avg_acc = correct / len(test_loader.dataset)
+    avg_loss = test_loss / len(test_loader.dataset)
+    logger.info(f"Test set: Average loss: {avg_loss}, Average accuracy: {100*avg_acc}%")
 
-    test_loss /= len(test_loader.dataset)
-    logger.info(
-        "Test set: Average loss: {:.4f}, Average accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss, correct, len(test_loader.dataset), 100.0 * correct / len(test_loader.dataset)
-        )
-    )
 
 
 def train(model, train_loader, validation_loader, criterion, optimizer,  epochs):
@@ -163,7 +161,7 @@ def main(args):
     '''
     TODO: Save the trained model
     '''
-    torch.save(model, path)
+    #torch.save(model, path)
        
 
 if __name__=='__main__':
