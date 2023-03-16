@@ -60,8 +60,14 @@ Remember that your README should:
 ## Debugging and Profiling
 **TODO**: Give an overview of how you performed model debugging and profiling in Sagemaker
 
+To perform debugging you need to import smdebug library. Then creat a hook. Add hook in training and test function at appropriate (begining) places.
+
 ### Results
 **TODO**: What are the results/insights did you get by profiling/debugging your model?
+![image](https://user-images.githubusercontent.com/83595196/225605176-1ff32e5c-7494-4b93-a85a-0f28455ec839.png)
+
+This chart shows train loss has decreased but validation loss has increased. Which is a clear indication of overfitting.
+Hypertuning needs to be improved. I can give larger range of values for tuning job.
 
 **TODO** Remember to provide the profiler html/pdf file in your submission.
 
