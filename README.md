@@ -77,8 +77,7 @@ Hypertuning needs to be improved. I can give larger range of values for tuning j
 The model is deployed on ml.m5.large image. It takes image url as input.
 
 **TODO** Remember to provide a screenshot of the deployed active endpoint in Sagemaker.
-
-
+![image](https://user-images.githubusercontent.com/83595196/227224700-b550ffa5-3a07-485a-97a9-10f94f0921af.png)
 
 
 ## Standout Suggestions
