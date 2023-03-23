@@ -1,5 +1,8 @@
 #TODO: Import your dependencies.
 #For instance, below are some dependencies you might need if you are using Pytorch
+import pip
+pip.main(['install', '--upgrade', 'pip'])
+pip.main(['install', 'smdebug'])
 import numpy as np
 import torch
 import torch.nn as nn
@@ -37,6 +40,7 @@ def test(model, test_loader, criterion, hook):
           Remember to include any debugging/profiling hooks that you might need
           
     '''
+
     model.eval()
     hook.set_mode(smd.modes.EVAL)
     test_loss = 0
@@ -117,7 +121,6 @@ def create_data_loaders(data, batch_size):
     '''
     #train data loader
     train_path = os.path.join(data, "train")
-    
     train_transform = transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.Resize((224,224)),
@@ -129,7 +132,6 @@ def create_data_loaders(data, batch_size):
     
     #test data loader
     test_path = os.path.join(data, "test")
-    
     test_transform = transforms.Compose([
         transforms.Resize((224,224)),
         transforms.ToTensor()
@@ -184,7 +186,7 @@ def main(args):
     '''
     TODO: Save the trained model
     '''
-    
+
     torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
 
        
